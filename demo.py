@@ -63,6 +63,17 @@ k_s = tf.constant(.4, dtype=tf.float32)
 
 @tf.function
 def get_image(a00, a01, a02, a11, a12, a22, b0, b1, b2, image):
+    """
+    Input parameters define a quadratic surface via the equation q(x) = 1, where q(x) = (1 / 2) x.T A x - b.T x and
+    A is a symmetric matrix with the given entries.
+
+    get_image will use the camera and light parameters to take a "snapshot" of the quadratic surface q(x) = 1
+
+    :param image (tf.Variable): image to be updated
+    :return: updated image
+    """
+
+    # Care must be taken to ensure that tensorflow recognizes our output as a differentiable function of the inputs
     row_0 = tf.stack([a00, a01, a02])
     row_1 = tf.stack([a01, a11, a12])
     row_2 = tf.stack([a02, a12, a22])
@@ -70,31 +81,38 @@ def get_image(a00, a01, a02, a11, a12, a22, b0, b1, b2, image):
     b = tf.stack([b0, b1, b2])
     b = tf.reshape(b, shape=(3, 1))
 
+    # Iterating over each pixel in the image
     for i in tf.range(tf.cast(HEIGHT, dtype=tf.float32)):
-
         for j in tf.range(tf.cast(WIDTH, dtype=tf.float32)):
+
+            # The pixel is obtained using the camera parameters
             PIXEL = EYE + zoom * FRONT + (-width / 2 + (j + 1) * pixel_length) * RIGHT + (
                         height / 2 - (i + 1) * pixel_length) * UP
+
+            # The direction vector pointing from the EYE to the current PIXEL
             DIRECTION = PIXEL - EYE
             DIRECTION = DIRECTION / tf.norm(DIRECTION)
 
+            # Some convenient quantities/renamings
             d = DIRECTION
             e = EYE
             Ad = A @ d
             Ae = A @ e
             res = Ae - b
 
+            # These coefficients come about when attempting to find intersections of the ray with the surface
             a2 = (1 / 2) * tf.transpose(d) @ Ad
             a1 = tf.transpose(d) @ res
             a0 = (1 / 2) * tf.transpose(e) @ res - 1
-
             discriminant = a1 ** 2 - 4 * a2 * a0
 
+            # We must use tf.cond instead of tf.where in order to avoid nan in the case of no intersection
             t_plus, t_minus = tf.cond(tf.greater(discriminant, 0.),
                                       lambda: ((-a1 + tf.sqrt(discriminant)) / (2 * a2),
                                                (-a1 - tf.sqrt(discriminant)) / (2 * a2)),
                                       lambda: (tf.zeros_like(a1), tf.zeros_like(a1)))
 
+            # We are interested in the first point of intersection; these conditions are used to find it
             condition_0 = tf.logical_or(tf.less_equal(discriminant, 0.),
                                         tf.less_equal(tf.reduce_max([t_plus, t_minus]), 0.))
             condition_1 = tf.greater(tf.reduce_min([t_plus, t_minus]), 0.)
@@ -106,29 +124,37 @@ def get_image(a00, a01, a02, a11, a12, a22, b0, b1, b2, image):
             value_2 = t_plus
             value_3 = t_minus
 
+            # Finally, the value of t such that EYE + t * DIRECTION is the first point of intersection with the surface
             t = tf.where(condition_0, value_0,
                          tf.where(condition_1, value_1,
                                   tf.where(condition_2, value_2,
                                            tf.where(condition_3, value_3, value_0))))
 
+            # First point of intersection with surface
             POINT = EYE + t * DIRECTION
 
+            # Direction from POINT to EYE
             V = -DIRECTION
 
+            # Outward normal on surface at POINT
             N = A @ POINT - b
             N = N / tf.norm(N)
             N = tf.where(tf.greater_equal(tf.transpose(V) @ N, 0.), N, -N)
 
+            # Direction vector from POINT to single light source
             L = LIGHT - POINT
             L = L / tf.norm(L)
 
+            # Reflection of L about N
             R = 2 * (tf.transpose(L) @ N) * N - L
 
+            # Intensity as computed from Phong reflectance model
             intensity = tf.where(condition_0, i_a,
                                  k_a * i_a + k_d * i_d * tf.transpose(L) @ N + k_s * i_s * (
                                              tf.transpose(R) @ V) ** shininess)
             intensity = tf.squeeze(intensity)
 
+            # Update entry of image
             image = tf.tensor_scatter_nd_update(image, [[tf.cast(i, dtype=tf.int32), tf.cast(j, dtype=tf.int32)]],
                                                 [intensity])
 
