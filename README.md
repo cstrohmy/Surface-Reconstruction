@@ -1,45 +1,46 @@
 # Surface Reconstruction
 
-Description of your project goes here.
+This project implements a surface reconstruction algorithm based on differentiable rendering. It is written in Python and leverages TensorFlow for efficient computations. The algorithm uses the Phong reflectance model for realistic surface reconstruction.
 
 ## Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
-- [Examples](#examples)
-- [Documentation](#documentation)
-- [Contributing](#contributing)
-- [License](#license)
 - [Acknowledgments](#acknowledgments)
-- [Contact Information](#contact-information)
+- [License](#license)
 
 ## Installation
 
-Explain how to install your project and any dependencies.
+1. Clone the repository to your local machine:
+    \`\`\`bash
+    git clone https://github.com/your_username/surface-reconstruction.git
+    \`\`\`
+2. Navigate to the project directory:
+    \`\`\`bash
+    cd surface-reconstruction
+    \`\`\`
+3. Install TensorFlow:
+    \`\`\`bash
+    pip install tensorflow
+    \`\`\`
+
+That's it! You're now ready to run the `demo.py` file.
 
 ## Usage
 
-Provide instructions on how to use your project. Include code examples.
+To run the surface reconstruction algorithm, simply execute the `demo.py` script:
 
-## Examples
+\`\`\`bash
+python demo.py
+\`\`\`
 
-Include additional examples or use cases if applicable.
+This will perform the reconstruction and output the result to a specified location.
 
-## Documentation
-
-Link to comprehensive project documentation if available.
-
-## Contributing
-
-Explain how others can contribute to your project.
-
-## License
-
-Specify the project's license and include a link to the full license text.
+After editing the configuration, re-run `demo.py` to see the effects of your changes.
 
 ## Acknowledgments
 
-Give credit to people or projects that inspired or assisted you.
+This project was inspired by the work on the Phong reflectance model. A special thanks to its contributors for making the model widely available and easily accessible.
 
-## Contact Information
+## License
 
-Optional: Provide contact information or links to your profiles/websites.
+This project is licensed under the MIT License - see [LICENSE.md](LICENSE.md) for details.

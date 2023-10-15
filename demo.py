@@ -1,7 +1,5 @@
 import tensorflow as tf
 from tensorflow import cos, sin
-import matplotlib.pyplot as plt
-import numpy as np
 from tensorflow.keras.optimizers import Adam
 
 """
