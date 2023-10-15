@@ -1,3 +1,2 @@
-Copyright 2023 Christopher Strohmeier
-
-
+# Surface-Reconstruction
+Surface reconstruction via differentiable rendering based on the Phong reflectance model.
